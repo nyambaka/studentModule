@@ -12,7 +12,7 @@ stdInListner::~stdInListner(){
 
 
 void stdInListner::run(){
-    bool ok = true;
+      bool ok = true;
       char chBuf[4096];
       DWORD dwRead;
       HANDLE hStdinDup;

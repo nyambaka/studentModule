@@ -27,7 +27,8 @@ public slots:
     void  setStudentName(const QString newStudentName);
     void  setStudentAdmissionNumber(const QString newStudentAdmission);
     void  runCommand(const QString command);
-
+    void  receiveWork(const QString sampleCommand);
+    std::string sendOutput(std::string sampleOutput);
 };
 
 #endif // SINGLESTUDENT_H

@@ -43,15 +43,12 @@ int main(int argc, char *argv[])
 //   parser.addHelpOption();
 //   parser.process(a);
 
-
     QCommandLineParser parser;
     parser.setApplicationDescription("used to edit a subjet ");
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsCompactedShortOptions);
 
-
     QCommandLineOption name= QCommandLineOption("name","name","unkwon","00");
     QCommandLineOption code = QCommandLineOption("code","code","unkwon","00");
-
 
     QCommandLineOption p = QCommandLineOption("p");
     p.setDefaultValue("kim");
@@ -59,29 +56,13 @@ int main(int argc, char *argv[])
     QCommandLineOption o = QCommandLineOption("o");
     o.setDefaultValue("house");
 
-
+  singleStudent * sampleStudent= new singleStudent();
     parser.addOptions({name,code,p,o});
 
     parser.process(a);
-    std::cout<<"sample project noted";
-    if(parser.isSet(o))
-        std::cout<<"o is set";
-//    QProcess * studentProcess= new QProcess();
-//    studentProcess->setStandardOutputFile("custome");
-//    studentProcess->setReadChannel(QProcess::ProcessChannel::StandardOutput);
-//    studentProcess->setProgram("C:/Windows/System32/cmd.exe");
-////    studentProcess->setArguments(QStringList()<<"git --version");
-//    studentProcess->startDetached("git --version");
+    if(parser.isSet(o)){
 
-//   qDebug()<<studentProcess->state();
-//   qDebug()<<studentProcess->processId();
-//   qDebug()<<studentProcess->program();
-
-    singleStudent * sampleStudent= new singleStudent();
-    sampleStudent->runCommand("nelson");
-
-
-
-
+    }
+    sampleStudent->runCommand("h");
     return a.exec();
 }
