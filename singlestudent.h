@@ -4,7 +4,6 @@
 #include <QObject>
 #include<QString>
 #include<QJsonObject>
-#include<stdinlistner.h>
 #include<QDebug>
 
 class singleStudent : public QObject
@@ -12,7 +11,6 @@ class singleStudent : public QObject
     Q_OBJECT
 private:
     QJsonObject data;
-    stdInListner * listener;
 
 public:
     explicit singleStudent(QObject *parent = nullptr);

@@ -1,6 +1,5 @@
 #include <QCoreApplication>
 #include<QApplication>
-#include<QMessageBox>
 #include"singlestudent.h"
 #include<QJsonObject>
 #include<QDebug>
@@ -9,7 +8,10 @@
 #include<QCommandLineOption>
 #include<QStringList>
 #include<iostream>
-#include<QProcess>
+#include<QJsonDocument>
+#include<QFile>
+#include<QResource>
+#include<QTextStream>
 
 #include<iostream>
 
@@ -18,30 +20,26 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
     QCoreApplication::setApplicationName("student");
 
-    QJsonObject studentObject{
-
-    };
-
-//    QCommandLineParser parser;
-
-//    parser.setApplicationDescription("single student handler");
-
-//    //command line options ....name ..description...valueName...default value
-//    QCommandLineOption admission= QCommandLineOption("admission","Name","admission","unkwon");
-//    QCommandLineOption name= QCommandLineOption("name","admission number","name","00");
-//    QCommandLineOption amode= QCommandLineOption(QStringList()<<"o"<<"output","verbose mode","a","34");
-//    QCommandLineOption amode2= QCommandLineOption(QStringList()<<"u"<<"aOut","verbose mode","u","34");
-//    QCommandLineOption texrCommand=QCommandLineOption("nkjdkf");
-//    texrCommand.setDefaultValue("jdkf");
+    QFile * studentTemp = new QFile(":/student/secondary.json");
+//    studentTemp->setOpenMode(QFile::openMode(studentTemp->Append));
+    if(!studentTemp->open(QFile::ReadOnly)){
+        std::cout<<"could not open file for reading and writing";
+        return 0;
+    }
 
 
-//    //add all option on the command line
-//    parser.addOptions({admission,name,amode,texrCommand,amode2});
+     QString fileContent(studentTemp->readAll());
+     QJsonDocument studentDoc = QJsonDocument::fromJson(fileContent.toUtf8());
+     QJsonObject studentObj = studentDoc.object();
+     QStringList list;
+     list<<"name";
+     foreach (QString temp, list) {
+         if(studentObj.contains(temp)){
+             qDebug()<<studentObj[temp];
+         }
+     }
 
-//    //add help and and process the application
-
-//   parser.addHelpOption();
-//   parser.process(a);
+     studentObj.empty();
 
     QCommandLineParser parser;
     parser.setApplicationDescription("used to edit a subjet ");
@@ -56,13 +54,17 @@ int main(int argc, char *argv[])
     QCommandLineOption o = QCommandLineOption("o");
     o.setDefaultValue("house");
 
-  singleStudent * sampleStudent= new singleStudent();
+    singleStudent * sampleStudent= new singleStudent();
     parser.addOptions({name,code,p,o});
 
     parser.process(a);
     if(parser.isSet(o)){
-
+      sampleStudent->runCommand("h");
+       a.quit();
+       return 0;
     }
-    sampleStudent->runCommand("h");
-    return a.exec();
+
+
+    a.quit();
+    return 0;
 }

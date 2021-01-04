@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/student">
+        <file>student.json</file>
+        <file>secondary.json</file>
+    </qresource>
+</RCC>

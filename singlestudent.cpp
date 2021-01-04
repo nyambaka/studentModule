@@ -1,9 +1,11 @@
 #include "singlestudent.h"
 #include<iostream>
 #include<QFile>
+#include<QSettings>
 
 singleStudent::singleStudent(QObject *parent) : QObject(parent)
 {
+
 }
 
 singleStudent::singleStudent(const QJsonObject &studentData):data(studentData){
@@ -25,13 +27,11 @@ QString singleStudent::DebugSingleStudent(){
 }
 
 void singleStudent::runCommand(const QString ){
-    listener = new  stdInListner(this);
-    listener->start();
-    connect(listener, &stdInListner::receivedCommand, this, &singleStudent::receiveWork);
+    std::cout<<"o has been called";
 }
 
 void singleStudent::receiveWork(const QString work ){
-    std::cout<<"sample output"+work.toStdString();
+    std::cout<<"sample output"+work.toUpper().toStdString();
 }
 
 std::string singleStudent::sendOutput(std::string sampleOutput){
