@@ -45,3 +45,10 @@ void singleStudent::receiveWork(const QString work ){
 std::string singleStudent::sendOutput(std::string sampleOutput){
     return sampleOutput;
 }
+
+void singleStudent::createSqlTable(){
+    Qstring sqlQuery="";
+    if(!result.contains("error")){
+       sqlQuery+="create table "
+    }
+}

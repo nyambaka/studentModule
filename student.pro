@@ -12,7 +12,7 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     singlestudent.cpp \
-    requirements.cpp
+    utility.cpp
 
 
 # The following define makes your compiler emit warnings if you use
@@ -28,7 +28,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS += \
     singlestudent.h \
-    requirements.h
+    utility.h
 
 RESOURCES += \
     doc.qrc

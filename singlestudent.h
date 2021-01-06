@@ -5,17 +5,21 @@
 #include<QString>
 #include<QJsonObject>
 #include<QDebug>
+#include<QRegExp>
 
 class singleStudent : public QObject
 {
     Q_OBJECT
 private:
     QJsonObject data;
+    QJsonObject result;
 
 public:
     explicit singleStudent(QObject *parent = nullptr);
-    explicit singleStudent(const QJsonObject &studentData);
+    explicit singleStudent(const QJsonObject &studentData,const QJsonObject &result);
     QString DebugSingleStudent();
+    static bool validate(QString value,QString expression);
+    void createSqlTable();
 
 signals:
     void studentNameChanged(const QString newStudentName);
