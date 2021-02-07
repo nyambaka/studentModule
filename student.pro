@@ -1,6 +1,7 @@
 QT += core
 QT += gui
 QT += widgets
+QT += sql
 
 CONFIG += c++11
 
@@ -12,7 +13,8 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     singlestudent.cpp \
-    utility.cpp
+    utility.cpp \
+    select.cpp
 
 
 # The following define makes your compiler emit warnings if you use
@@ -28,7 +30,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS += \
     singlestudent.h \
-    utility.h
+    utility.h \
+    select.h
 
 RESOURCES += \
     doc.qrc

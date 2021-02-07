@@ -13,14 +13,15 @@
 #include<QTextStream>
 #include<QJsonValue>
 #include<QJsonArray>
-#include<utility.h>
 #include<QList>
 #include<QRegExp>
 #include<QValidator>
 #include<QRegularExpression>
 #include<QRegularExpressionMatch>
-
 #include<iostream>
+#include<iostream>
+#include"utility.h"
+#include<QMap>
 
 int main(int argc, char *argv[])
 {
@@ -38,12 +39,11 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-
     utility * tempUtility = new utility();
 
-     QString fileContent(studentTemp->readAll());
-     QJsonDocument studentDoc = QJsonDocument::fromJson(fileContent.toUtf8());
-     QJsonObject studentObj = studentDoc.object();
+    QString fileContent(studentTemp->readAll());
+    QJsonDocument studentDoc = QJsonDocument::fromJson(fileContent.toUtf8());
+    QJsonObject studentObj = studentDoc.object();
 
     QCommandLineParser parser;
     parser.setApplicationDescription("used to edit a subjet ");
@@ -51,22 +51,46 @@ int main(int argc, char *argv[])
 
     QList<QCommandLineOption> pOptions;
     foreach (auto val, studentObj) {
-       pOptions<<tempUtility->createCommandLineOption(val.toArray());
+        pOptions<<tempUtility->createCommandLineOption(val.toArray());
     }
     parser.addOptions(pOptions);
 
-    QList<QString>ControlOptions;
-    ControlOptions<<"output"<<"interactive"<<"input"<<"create";
+    QMap<QString,QString>selectOptions;
+    selectOptions.insert("g","age");
+    selectOptions.insert("c","class");
+    selectOptions.insert("p","kcpe");
+    selectOptions.insert("y","kcpeMark");
+    selectOptions.insert("s","stream");
+    selectOptions.insert("h","school");
+    selectOptions.insert("j","subject");
+    selectOptions.insert("g","gender");
+    selectOptions.insert("a","active");
+    selectOptions.insert("f","fees");
+    selectOptions.insert("l","lostBook");
+    selectOptions.insert("e","code");
+    selectOptions.insert("f","firstName");
+    selectOptions.insert("n","secondName");
+    selectOptions.insert("t","thirdName");
+    selectOptions.insert("u","fourthName");
+    selectOptions.insert("r","admissionNumber");
 
-    //commandline Options that control the use of the class;
+    QJsonObject deepSelectionOption = QJsonObject();
+    QJsonObject deepSelectionOptionProvided = QJsonObject();
 
-    QCommandLineOption interactive=QCommandLineOption("iteractive","interactive mode","interactive","false");
-    QCommandLineOption output =QCommandLineOption("output","output format","output","text");
-    QCommandLineOption input=QCommandLineOption("input","Input Source","input","std");
-    QCommandLineOption create = QCommandLineOption("create","Create a new Student","create","false");
-    QCommandLineOption validate = QCommandLineOption("validate","Validate the input","validate","true");
+    deepSelectionOption.insert("sO",QJsonArray()<<"sO"<<"streamViewOption"<<"sO"<<"00"<<"stream");
+    deepSelectionOption.insert("jO",QJsonArray()<<"jO"<<"subjectViewOption"<<"jO"<<"00"<<"subject");
+    deepSelectionOption.insert("cO",QJsonArray()<<"cO"<<"ClassViewOption"<<"cO"<<"00"<<"class");
+    deepSelectionOption.insert("lO",QJsonArray()<<"lO"<<"lostBookViewOption"<<"lO"<<"00"<<"lostBook");
+    deepSelectionOption.insert("fO",QJsonArray()<<"fO"<<"feesViewOption"<<"fO"<<"00"<<"gammu");
 
-    parser.addOptions({interactive,output,input,create,validate});
+    foreach (QJsonValue val, deepSelectionOption){
+        QJsonArray tempArray=val.toArray();
+        parser.addOption(QCommandLineOption(tempArray[0].toString(),tempArray[1].toString(),tempArray[3].toString(),tempArray[3].toString()));
+    }
+
+
+    parser.addOption(QCommandLineOption(selectOptions.keys()));
+
     parser.addHelpOption();
     parser.addVersionOption();
 
@@ -74,14 +98,24 @@ int main(int argc, char *argv[])
 
     QStringList options(parser.optionNames());
     bool hasErrors=false;
-
+    QStringList selectOptionProvided,deepSelectionOptionkeys;
+    deepSelectionOptionkeys=deepSelectionOption.keys();
 
     foreach (QString providedOptions, options) {
-
+        if(selectOptions.contains(providedOptions)){
+            selectOptionProvided.append(selectOptions.value(providedOptions));
+            continue;
+        }
+        if(deepSelectionOptionkeys.contains(providedOptions)){
+            deepSelectionOptionProvided.insert(deepSelectionOption.value(providedOptions).toArray()[4].toString(),parser.value(providedOptions));
+//            deepSelectionOptionProvided[]=parser.value(providedOptions);
+            //deepSelectionOptionProvided[deepSelectionOption.value(providedOptions).toArray()[4].toString()]=parser.value(providedOptions);
+            continue;
+        }
         if(!singleStudent::validate(parser.value(providedOptions),studentObj[providedOptions].toArray()[1].toString())){
             hasErrors=true;
             result.insert(providedOptions,studentObj[providedOptions].toArray()[8].toString());
-//            qDebug()<<studentObj[providedOptions].toArray()[5].toString()<<":error  "<<studentObj[providedOptions].toArray()[8].toString();
+            //            qDebug()<<studentObj[providedOptions].toArray()[5].toString()<<":error  "<<studentObj[providedOptions].toArray()[8].toString();
         }
         else{
             studentData.insert(providedOptions,parser.value(providedOptions));
@@ -89,15 +123,26 @@ int main(int argc, char *argv[])
     }
 
     if(!hasErrors){
-       singleStudent * tempStudent = new singleStudent(studentData,studentData);
-
+        singleStudent tempStudent (studentData,studentData);
+        QObject::connect(&tempStudent,singleStudent::quit,&a,QCoreApplication::quit);
+        //std::cout<<tempStudent.mysqlSelect(selectValues,studentObj).toStdString();
+        //std::cout<<tempStudent.mysqlSave().toStdString();
+        tempStudent.connectToMysqlDatabase();
+        tempStudent.mysqlSelectQuery(tempStudent.mysqlSelect(selectOptionProvided,studentObj),deepSelectionOptionProvided);
+//        std::cout<<tempStudent.sendOutput();
+//        tempStudent.startSubjectProcess("");
+        if(deepSelectionOptionProvided.count()>0){
+            a.exec();
+        }else{
+            a.quit();
+        }
+        return 0;
 
     }else{
         result.insert("error","true");
         QJsonDocument doc= QJsonDocument(result);
-        qDebug()<<doc.toJson(QJsonDocument::JsonFormat::Compact);
+        std::cout<<doc.toJson(QJsonDocument::JsonFormat::Compact).toStdString();
     }
-
     a.quit();
     return 0;
 }

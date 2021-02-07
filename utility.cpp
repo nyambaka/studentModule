@@ -9,9 +9,7 @@ utility::utility(QObject *parent) : QObject(parent)
 
 }
 
-
 QCommandLineOption utility::createCommandLineOption(const QJsonArray &val){
-
     return val[0].toBool()?createShortCommandLineOption(val):createLongCommandlineOption(val);
 }
 
