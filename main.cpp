@@ -56,19 +56,19 @@ int main(int argc, char *argv[])
     parser.addOptions(pOptions);
 
     QMap<QString,QString>selectOptions;
-    selectOptions.insert("g","age");
+    selectOptions.insert("e","age");
     selectOptions.insert("c","class");
     selectOptions.insert("p","kcpe");
     selectOptions.insert("y","kcpeMark");
     selectOptions.insert("s","stream");
-    selectOptions.insert("h","school");
+    selectOptions.insert("o","school");
     selectOptions.insert("j","subject");
     selectOptions.insert("g","gender");
     selectOptions.insert("a","active");
     selectOptions.insert("f","fees");
     selectOptions.insert("l","lostBook");
-    selectOptions.insert("e","code");
-    selectOptions.insert("f","firstName");
+    selectOptions.insert("d","code");
+    selectOptions.insert("m","firstName");
     selectOptions.insert("n","secondName");
     selectOptions.insert("t","thirdName");
     selectOptions.insert("u","fourthName");
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 
     parser.addOption(QCommandLineOption(selectOptions.keys()));
 
-    parser.addHelpOption();
+//    parser.addHelpOption();
     parser.addVersionOption();
 
     parser.process(a);
