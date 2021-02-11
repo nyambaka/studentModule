@@ -11,7 +11,7 @@ singleStudent::singleStudent(QObject *parent) : QObject(parent)
     initialize();
 }
 
-singleStudent::singleStudent(const QJsonObject &studentData):data(studentData){
+singleStudent::singleStudent(const QJsonObject &studentData,const QJsonObject &result):data(studentData),result(result){
     initialize();
 }
 
@@ -26,12 +26,7 @@ bool singleStudent::validate(QString data, QString regularExpr){
 }
 
 void singleStudent::sendOutput(){
-    QJsonDocument doc= QJsonDocument(*result);
-    std::cout<<doc.toJson(QJsonDocument::JsonFormat::Compact).toStdString();
-}
-
-void singleStudent::output(QJsonObject output){
-    QJsonDocument doc= QJsonDocument(output);
+    QJsonDocument doc= QJsonDocument(result);
     std::cout<<doc.toJson(QJsonDocument::JsonFormat::Compact).toStdString();
 }
 
@@ -143,14 +138,76 @@ bool singleStudent::connectToMysqlDatabase(){
     return db.open();
 }
 
+
 void singleStudent::mysqlSelectQuery(QStringList values,QJsonObject fields,QJsonObject advancedSearch){
     QString query = mysqlSelect(values,fields);
     select * selector= new select(query);
-    selector->resultMap(advancedSearch);
-    output(selector->response());
+    result = selector->result(true);
+    if(advancedSearch.count()>0){
+        suspendQuit= true;
+        QStringList r= result.keys();
+        QString studentId= r.join("");
+        qDebug()<<r;
+//        if(studentId.isEmpty()){
+//            return mainResult;
+//        }
+        QJsonObject::iterator it = advancedSearch.begin();
+        while (it!=advancedSearch.end()) {
+            startProcess(it.key(),it.value().toString(),studentId);
+            it++;
+        }
+    }
+    else{
+        emit processEnded();
+    }
+}
+
+
+void singleStudent::startProcess(QString processName,QString arguments,QString identifier){
+    processes.insert(processName,new QProcess(this));
+    connect(processes.value(processName),QProcess::readyReadStandardOutput,this,[this,processName,identifier](){
+        emit readProcessReady(processName,identifier);
+    });
+    processes.value(processName)->start(processName+" "+arguments,QIODevice::ReadWrite);
+    emit processStarted();
+}
+
+
+void singleStudent::endProcess(QString processName){
+    if(processName.contains(processName)){
+        processes[processName]->close();
+        emit processEnded();
+    }
+}
+
+void singleStudent::decreaseCounter(){
+    if(counter!=0){
+        counter=counter-1;
+    }
+    if(counter==0){
+        sendOutput();
+        emit quit();
+    }
+    emit quit();
 }
 
 void singleStudent::initialize(){
     suspendQuit=false;
-    result=new QJsonObject();
+    result={};
+    counter=0;
+    connect(this,singleStudent::processStarted,this,singleStudent::increaseCounter);
+    connect(this,singleStudent::processEnded,this,singleStudent::decreaseCounter);
+    connect(this,singleStudent::readProcessReady,this,singleStudent::readProcess);
+    processes=QMap<QString ,QProcess *>();
+}
+
+void singleStudent::readProcess(QString processName,QString identifier){
+    QString resultString(processes[processName]->readAllStandardOutput());
+    result[identifier].toObject().insert(processName,resultString);
+    qDebug()<<result.keys().join("");
+    emit endProcess(processName);
+}
+
+void singleStudent::increaseCounter(){
+    counter =counter+1;
 }

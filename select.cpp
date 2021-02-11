@@ -1,9 +1,7 @@
 #include "select.h"
-#include<QJsonObject>
-#include<QString>
 #include<QSqlRecord>
-#include<QVariant>
 #include<QSqlQuery>
+#include<QDebug>
 
 select::select(QObject *parent) : QObject(parent)
 {
@@ -14,32 +12,77 @@ select::select(QString inputQuery){
     query=inputQuery;
 }
 
-QJsonObject select::result(bool isMain){
+void select::resultMap(QJsonObject advancedSearch){
     QSqlQuery q;
-    QJsonObject resObject={};
+    QMap<QString,QVariant>temprecordresult;
     if (query.isEmpty()){
-        resObject["error"]="empty query";
-        return resObject;
+        temprecordresult.insert("error","empty query");
+        mainresultlist.append(temprecordresult);
+        return;
     }
     if(q.exec(query)){
         while (q.next()) {
-            QJsonObject record={};
             QSqlRecord rec = q.record();
             int length=rec.count();
+
             for(int i=0;i<length;i++){
                 QVariant field =rec.fieldName(i);
                 QVariant value = rec.value(i);
-                record[field.toString()]=value.toString();
+                if(field.toString()=="id"){
+                   QJsonObject::iterator it= advancedSearch.begin();
+                    while(it!= advancedSearch.end()){
+                        temprecordresult.insert(it.key(),childSelect(it.key(),value.toString()));
+                        it++;
+                    }
+                }
+                temprecordresult[field.toString()]=value.toString();
             }
-            if(isMain){
-                resObject[record.value("id").toString()]=record;
-            }else{
-                resObject = record;
+            mainresultlist.append(temprecordresult);
+        }
+        return;
+    }else{
+        temprecordresult.insert("error","error in executing sql query");
+        temprecordresult.insert("sql",query);
+        mainresultlist.append(temprecordresult);
+    }
+}
+
+QMap<QString,QVariant> select::childSelect(QString table,QString id){
+    QMap<QString,QVariant>values;
+    if(table.isEmpty()|| id.isEmpty())
+        return values;
+    QSqlQuery q;
+    QSqlQuery innerQuery;
+    QString query="select `"+table+"` from student"+table+" where student="+id;
+    if(q.exec(query)){
+        while (q.next()) {
+            QString inQUery = "select id,name from "+table+" where id="+q.value(0).toString();
+            innerQuery.exec(inQUery);
+            while(innerQuery.next()){
+                values.insert(innerQuery.value(0).toString(),innerQuery.value(1));
             }
         }
-    }else{
-        resObject["error"]="error in executing sql query";
-        resObject["sql"]= query;
     }
-    return resObject;
+    return values;
+}
+
+QJsonObject select::childQuery(QString query){
+    QJsonObject returnValue;
+    if(query.isEmpty())
+        return returnValue; ;
+    QSqlQuery q;
+    if(q.exec(query)){
+        while (q.next()) {
+            returnValue[q.value(0).toString()]=q.value(1).toString();
+        }
+    }
+    return returnValue;
+}
+
+QJsonObject select::response(){
+    QMap<QString,QVariant>showingResult;
+    foreach (auto ca, mainresultlist) {
+        showingResult.insert(ca.value("id").toString(),ca);
+    }
+    return QJsonObject::fromVariantMap(showingResult);
 }

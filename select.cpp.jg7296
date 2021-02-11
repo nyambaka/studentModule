@@ -1,0 +1,95 @@
+#include "select.h"
+#include<QSqlRecord>
+#include<QSqlQuery>
+#include<QDebug>
+
+
+select::select(QObject *parent) : QObject(parent)
+{
+    query="";
+}
+
+select::select(QString inputQuery){
+    query=inputQuery;
+}
+
+QJsonObject select::result(bool isMain){
+    QSqlQuery q;
+    QJsonObject resObject={};
+    if (query.isEmpty()){
+        resObject["error"]="empty query";
+        return resObject;
+    }
+    if(q.exec(query)){
+        while (q.next()) {
+            QJsonObject record={};
+            QSqlRecord rec = q.record();
+            int length=rec.count();
+            for(int i=0;i<length;i++){
+                QVariant field =rec.fieldName(i);
+                QVariant value = rec.value(i);
+                record[field.toString()]=value.toString();
+            }
+            if(isMain){
+                resObject[record.value("id").toString()]=record;
+            }else{
+                resObject = record;
+            }
+        }
+    }else{
+        resObject["error"]="error in executing sql query";
+        resObject["sql"]= query;
+    }
+    return resObject;
+}
+
+void select::resultMap(){
+    QSqlQuery q;
+    QMap<QString,QVariant>temprecordresult;
+    if (query.isEmpty()){
+        temprecordresult.insert("error","empty query");
+        return;
+    }
+    if(q.exec(query)){
+        while (q.next()) {
+            QSqlRecord rec = q.record();
+            int length=rec.count();
+            for(int i=0;i<length;i++){
+                QVariant field =rec.fieldName(i);
+                QVariant value = rec.value(i);
+                temprecordresult[field.toString()]=value.toString();
+            }
+        }
+    }else{
+        temprecordresult.insert("error","error in executing sql query");
+        temprecordresult.insert("sql",query);
+    }
+    mainresultlist.append(temprecordresult);
+}
+
+
+ QMap<QString,QVariant> select::selectResult(){
+     subsequentResult.insert("sample","sample random value added");
+//     mainResult.insert("sample","added a value to the return value");
+    return mainResult;
+}
+
+
+QJsonObject select::response(){
+    foreach (auto map, mainresultlist) {
+         map.insert("subject",subsequentResult);
+         qDebug()<<map["subject"];
+    }
+    QMap<QString,QVariant>showingResult;
+    foreach (auto ca, mainresultlist) {
+//        showingResult.insert(ca.value("id").toString(),ca);
+    }
+     return QJsonObject::fromVariantMap(showingResult);
+ }
+
+
+
+void select::insertValues(QString id,QString name,QJsonObject value){
+//     response[id].toObject()["something"]="something else";
+//     response[id].toObject().insert(name,value);
+}

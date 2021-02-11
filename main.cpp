@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("student");
     QCoreApplication::setApplicationVersion("1.0.0");
 
-
     QJsonObject studentData= QJsonObject();
     QJsonObject result = QJsonObject();
 
@@ -60,13 +59,8 @@ int main(int argc, char *argv[])
     selectOptions.insert("c","class");
     selectOptions.insert("p","kcpe");
     selectOptions.insert("y","kcpeMark");
-    selectOptions.insert("s","stream");
-    selectOptions.insert("o","school");
-    selectOptions.insert("j","subject");
     selectOptions.insert("g","gender");
     selectOptions.insert("a","active");
-    selectOptions.insert("f","fees");
-    selectOptions.insert("l","lostBook");
     selectOptions.insert("d","code");
     selectOptions.insert("m","firstName");
     selectOptions.insert("n","secondName");
@@ -88,10 +82,9 @@ int main(int argc, char *argv[])
         parser.addOption(QCommandLineOption(tempArray[0].toString(),tempArray[1].toString(),tempArray[3].toString(),tempArray[3].toString()));
     }
 
-
     parser.addOption(QCommandLineOption(selectOptions.keys()));
 
-//    parser.addHelpOption();
+    parser.addHelpOption();
     parser.addVersionOption();
 
     parser.process(a);
@@ -108,14 +101,11 @@ int main(int argc, char *argv[])
         }
         if(deepSelectionOptionkeys.contains(providedOptions)){
             deepSelectionOptionProvided.insert(deepSelectionOption.value(providedOptions).toArray()[4].toString(),parser.value(providedOptions));
-//            deepSelectionOptionProvided[]=parser.value(providedOptions);
-            //deepSelectionOptionProvided[deepSelectionOption.value(providedOptions).toArray()[4].toString()]=parser.value(providedOptions);
             continue;
         }
         if(!singleStudent::validate(parser.value(providedOptions),studentObj[providedOptions].toArray()[1].toString())){
             hasErrors=true;
             result.insert(providedOptions,studentObj[providedOptions].toArray()[8].toString());
-            //            qDebug()<<studentObj[providedOptions].toArray()[5].toString()<<":error  "<<studentObj[providedOptions].toArray()[8].toString();
         }
         else{
             studentData.insert(providedOptions,parser.value(providedOptions));
@@ -123,21 +113,13 @@ int main(int argc, char *argv[])
     }
 
     if(!hasErrors){
-        singleStudent tempStudent (studentData,studentData);
+        singleStudent tempStudent (studentData);
         QObject::connect(&tempStudent,singleStudent::quit,&a,QCoreApplication::quit);
-        //std::cout<<tempStudent.mysqlSelect(selectValues,studentObj).toStdString();
         //std::cout<<tempStudent.mysqlSave().toStdString();
         tempStudent.connectToMysqlDatabase();
-        tempStudent.mysqlSelectQuery(tempStudent.mysqlSelect(selectOptionProvided,studentObj),deepSelectionOptionProvided);
-//        std::cout<<tempStudent.sendOutput();
-//        tempStudent.startSubjectProcess("");
-        if(deepSelectionOptionProvided.count()>0){
-            a.exec();
-        }else{
-            a.quit();
-        }
+        tempStudent.mysqlSelectQuery(selectOptionProvided,studentObj,deepSelectionOptionProvided);
+        a.quit();
         return 0;
-
     }else{
         result.insert("error","true");
         QJsonDocument doc= QJsonDocument(result);

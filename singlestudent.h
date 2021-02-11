@@ -16,47 +16,38 @@
 #include"select.h"
 #include<QJsonArray>
 #include<QMap>
+#include<QVariant>
 
 class singleStudent : public QObject
 {
     Q_OBJECT
 private:
     QMap<QString,QProcess *>processes;
+    QMap<QString,QVariant>* interMediateResult;
     QJsonObject data;
-    QJsonObject result;
-    int counter;
+    QJsonObject * result;
     bool suspendQuit;
-    void startProcess(QString processName,QString arguments);
+    void startProcess(QString processName,QString arguments,QString identifier);
     void initialize();
-    void endProcess(QString processName);
-
+    QString mysqlSelect(QStringList values,QJsonObject fields);
+    void output(QJsonObject output);
 
 public:
     explicit singleStudent(QObject *parent = nullptr);
-    explicit singleStudent(const QJsonObject &studentData,const QJsonObject &result);
+    explicit singleStudent(const QJsonObject &studentData);
     QString DebugSingleStudent();
     static bool validate(QString value,QString expression);
     void createSqlTable();
     QString mysqlSave();
-    QString mysqlSelect(QStringList values,QJsonObject fields);
     bool connectToMysqlDatabase();
-    void mysqlSelectQuery(QString query,QJsonObject advancedSearch);
-
+    void mysqlSelectQuery(QStringList values,QJsonObject fields,QJsonObject advancedSearch);
 
 signals:
-    void studentNameChanged(const QString newStudentName);
-    void studentAdmissionNumberChanged(const QString newStudentAdmission);
     void quit();
-    void processStarted();
-    void processEnded();
-    void startclassprocess();
-    void readProcessReady(QString processName);
 
 public slots:
-    void readProcess(QString processName);
-    void decreaseCounter();
-     void sendOutput();
-    void increaseCounter();
+    void sendOutput();
+
 };
 
 #endif // SINGLESTUDENT_H
