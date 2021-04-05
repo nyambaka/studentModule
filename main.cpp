@@ -32,13 +32,15 @@ int main(int argc, char *argv[])
     QJsonObject studentData= QJsonObject();
     QJsonObject result = QJsonObject();
 
-    QFile * studentTemp = new QFile(":/student/se.json");
+    QFile * studentTemp = new QFile(":/student/stu.json");
     if(!studentTemp->open(QFile::ReadOnly)){
         std::cout<<"could not open file for reading and writing";
         return 0;
     }
 
     utility * tempUtility = new utility();
+
+    bool schemaRequested=false;
 
     QString fileContent(studentTemp->readAll());
     QJsonDocument studentDoc = QJsonDocument::fromJson(fileContent.toUtf8());
@@ -70,6 +72,7 @@ int main(int argc, char *argv[])
 
     QJsonObject deepSelectionOption = QJsonObject();
     QJsonObject deepSelectionOptionProvided = QJsonObject();
+    QJsonObject limitAndOffsetProvided= QJsonObject();
 
     deepSelectionOption.insert("sO",QJsonArray()<<"sO"<<"streamViewOption"<<"sO"<<"00"<<"stream");
     deepSelectionOption.insert("jO",QJsonArray()<<"jO"<<"subjectViewOption"<<"jO"<<"00"<<"subject");
@@ -82,7 +85,23 @@ int main(int argc, char *argv[])
         parser.addOption(QCommandLineOption(tempArray[0].toString(),tempArray[1].toString(),tempArray[3].toString(),tempArray[3].toString()));
     }
 
+    QJsonObject limitAndOffset= QJsonObject();
+
+    limitAndOffset.insert("limit",QJsonArray()<<"limit"<<"limit"<<"limit"<<"50");
+    limitAndOffset.insert("offset",QJsonArray()<<"offset"<<"offset"<<"offset"<<"0");
+
+    foreach (QJsonValue val, limitAndOffset){
+        QJsonArray tempArray=val.toArray();
+        parser.addOption(QCommandLineOption(tempArray[0].toString(),tempArray[1].toString(),tempArray[3].toString(),tempArray[3].toString()));
+    }
+
     parser.addOption(QCommandLineOption(selectOptions.keys()));
+
+
+    QJsonObject UtilitOptions= QJsonObject();
+    UtilitOptions.insert("schema","schema");
+
+    parser.addOption(QCommandLineOption("schema"));
 
     parser.addHelpOption();
     parser.addVersionOption();
@@ -91,16 +110,33 @@ int main(int argc, char *argv[])
 
     QStringList options(parser.optionNames());
     bool hasErrors=false;
-    QStringList selectOptionProvided,deepSelectionOptionkeys;
+    QStringList selectOptionProvided,deepSelectionOptionkeys,limitAndOffsetkeys;
     deepSelectionOptionkeys=deepSelectionOption.keys();
+    limitAndOffsetkeys= limitAndOffset.keys();
 
     foreach (QString providedOptions, options) {
+        if(providedOptions.contains("schema")){
+            schemaRequested=true;
+        }
+
         if(selectOptions.contains(providedOptions)){
             selectOptionProvided.append(selectOptions.value(providedOptions));
             continue;
         }
         if(deepSelectionOptionkeys.contains(providedOptions)){
             deepSelectionOptionProvided.insert(deepSelectionOption.value(providedOptions).toArray()[4].toString(),parser.value(providedOptions));
+            continue;
+        }
+
+        if(limitAndOffsetkeys.contains(providedOptions)){
+            QRegularExpression rx("^\\d{1,15}$");
+            QRegularExpressionMatch match= rx.match(parser.value(providedOptions));
+            if(!match.hasMatch()){
+                hasErrors=true;
+                result.insert(providedOptions,providedOptions+" should be an interger");
+                continue;
+            }
+            limitAndOffsetProvided.insert(limitAndOffset.value(providedOptions).toArray()[0].toString(),parser.value(providedOptions));
             continue;
         }
         if(!singleStudent::validate(parser.value(providedOptions),studentObj[providedOptions].toArray()[1].toString())){
@@ -113,17 +149,30 @@ int main(int argc, char *argv[])
     }
 
     if(!hasErrors){
-        singleStudent tempStudent (studentData);
-        QObject::connect(&tempStudent,singleStudent::quit,&a,QCoreApplication::quit);
-        //std::cout<<tempStudent.mysqlSave().toStdString();
-        tempStudent.connectToMysqlDatabase();
-        tempStudent.mysqlSelectQuery(selectOptionProvided,studentObj,deepSelectionOptionProvided);
-        a.quit();
-        return 0;
+        if(schemaRequested){
+            QJsonObject studentSchema{};
+            foreach (auto key, studentObj) {
+                studentSchema.insert(key.toArray()[4].toString(),key.toArray()[1].toVariant().toString());
+            }
+            studentSchema.remove("");
+            QJsonDocument doc= QJsonDocument(studentSchema);
+            std::cout<<doc.toJson(QJsonDocument::JsonFormat::Compact).toStdString();
+
+        }else{
+            singleStudent tempStudent (studentData);
+            QObject::connect(&tempStudent,singleStudent::quit,&a,QCoreApplication::quit);
+            tempStudent.connectToMysqlDatabase();
+            tempStudent.mysqlSelectQuery(selectOptionProvided,studentObj,deepSelectionOptionProvided,limitAndOffsetProvided);
+            a.quit();
+            return 0;
+        }
+
     }else{
         result.insert("error","true");
         QJsonDocument doc= QJsonDocument(result);
         std::cout<<doc.toJson(QJsonDocument::JsonFormat::Compact).toStdString();
+
+
     }
     a.quit();
     return 0;

@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/student">
         <file>student.json</file>
+        <file>stu.json</file>
         <file>se.json</file>
     </qresource>
 </RCC>
